@@ -1,0 +1,69 @@
+{% load staticfiles %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>个人中心</title>
+    <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}">
+</head>
+<body>
+{% if user.is_authenticated %}
+<fieldset class="layui-elem-field layui-filed-title">
+    <legend>Welcome  {{ user.username }}</legend>
+</fieldset>
+<hr class="layui-bg-orange">
+{% endif %}
+<h2>作业上传界面</h2>
+<button class="layui-btn layui-btn-warm" type="button" onclick="window.location.href='/upload/logout'">登出</button>
+<button class="layui-btn layui-btn-warm" type="button" onclick="window.location.href='/'">返回</button>
+<table id="dataTable" lay-filter="data-table"></table>
+
+<script src="{% static 'layui/layui.js' %}"></script>
+<script>
+layui.use(['table','upload','jquery','layer'], function ($,upload,table) {
+        var table = layui.table;
+        //渲染表格
+        var HomeworkTable = table.render({//渲染table
+            method: 'post',//数据传输方式为post
+            cellMinWidth: 80,//单元格最小宽度为80
+            page: false,
+            elem: '#dataTable',//设置容器
+            url: '{% url 'get_homeworks' %}',//数据获取url
+            cols: [[//设置列标签、标题、宽度、是否排序等
+                {field: 'id', title:'作业编号',},
+                {field: 'des', title: '作业简介',},
+                {field: 'status', title: '作业状态'},
+                {field: 'duedate', title: '截止时间',},
+                {field: 'grade', title: '作业成绩'},
+                {field: 'upload', width: 100, title:'上传作业',templet: function (d) {
+                        return '<div class="layui-upload"> ' + '<button' + ' tableCellID="' + d.id + '"' +
+                    ' class="layui-btn layui-btn-primary layui-btn-xs  uploadCbtn' + d.id +
+                    '" >' +
+                    ' 上传作业 ' + '<i class="layui-icon">&#xe681;</i>   ' +
+                    '</button>' +
+                    '</div>'
+                    }},
+            ]],
+            done: function (obj) {
+                for (var index in obj.data) {
+                var itemID = obj.data[index].id;
+                upload.render({
+                    elem: '.uploadCbtn' + itemID //绑定元素
+                    ,url:  'upload_file/' + itemID +'/' //上传接口
+                    ,accept:'file'
+                    ,done: function(res){
+                        console.log(res);
+                        if(res.status===1)
+                            var layer=layui.layer;
+                            layer.msg(
+                                '上传成功'
+                            );
+                            table.reload('dataTable');
+                    }
+                })
+                }
+            }
+        });
+})
+</script>
+</body>
+</html>

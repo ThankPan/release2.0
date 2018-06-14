@@ -1,0 +1,143 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>作业提交详情</title>
+     <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}">
+</head>
+<body>
+{% if user.is_authenticated %}
+<fieldset class="layui-elem-field layui-filed-title">
+    <legend>Welcome  {{ user.username }}</legend>
+</fieldset>
+<hr class="layui-bg-orange">
+{% endif %}
+<h2>作业提交情况</h2>
+<button class="layui-btn layui-btn-warm" type="button" onclick="window.location.href='/upload/Teacher'">返回</button>
+<table id="dataTable" lay-filter="data-table"></table>
+<div>迟交作业</div>
+<table id="lateTable" lay-filter="data-table"></table>
+<script src="{% static 'layui/layui.js' %}"></script>
+<script>
+    layui.use('table',function () {
+        var table=layui.table;
+        var HomeworkTable = table.render({//渲染table
+            method: 'post',//数据传输方式为post
+            cellMinWidth: 20,//单元格最小宽度为80
+            page: true,
+            limit:10,
+            elem: '#dataTable',//设置容器
+            url: '/upload/Teacher/{{pk}}/get',//数据获取url
+            cols: [[//设置列标签、标题、宽度、是否排序等
+                {field: 'id', title:'学生学号',},
+                {field: 'homework', title: '作业',templet:function (d) {
+                        return '<a href="/upload/Teacher/{{ pk }}/download/'+d.id+'" class="layui-table-link">'+d.homework+'</a>'
+                    }},
+                {field: 'status', title: '作业状态'},
+                {field: 'grade', width: 100, title:'分数',templet: function (d) {
+                    if(d.status!='已评判')
+                        return '<button data-method="set" class="layui-btn layui-btn-warm" id="btn' + d.id + '" data-type="auto">打分</button>'
+                    else
+                        return '<div>'+d.score+'</div>'
+                    }},
+            ]],
+            done:function (obj) {
+                for(var index in obj.data){
+                    var itemID = obj.data[index].id
+                    layui.use(['jquery','layer'],function () {
+                         var $ = layui.jquery, layer=layui.layer;
+                         $(document).on('click','#btn'+itemID, function () {
+                             layer.open({
+                                 type:1,
+                                 skin: 'layui-layer-rim',
+                                 title: '打分',
+                                 content:'<form class="layui-form" action="{{ pk }}/grade/'+ itemID +'/" method="post">\n' +
+                                 '    <div class="layui-form-item">\n' +
+                                 '        <label class="layui-form-label">分数</label>\n' +
+                                 '        <div class="layui-input-block">\n' +
+                                 '            <input type="text" name="grade" autocomplete="off" class="layui-input">\n' +
+                                 '        </div>\n' +
+                                 '        <div class="layui-input-block">\n' +
+                                 '            <button class="layui-btn" lay-submit lay-filter="*">提交</button>\n' +
+                                 '        </div>\n' +
+                                 '    </div>\n' +
+                                 '</form>\n' +
+                                 '<script>\n' +
+                                 '    layui.use(\'form\',function () {\n' +
+                                 '        var form = layui.form;\n' +
+                                 '        form.on(\'submit(*)\',function () {\n' +
+                                 '            layer.msg("打分成功！");\n' +
+                                 '        });\n' +
+                                 '    });\n' +
+                                 '<\/script>'
+                             })
+                         })
+                    })
+                }
+            }
+        });
+    })
+</script>
+<script>
+    layui.use('table',function () {
+        var table=layui.table;
+        var HomeworkTable = table.render({//渲染table
+            method: 'post',//数据传输方式为post
+            cellMinWidth: 20,//单元格最小宽度为80
+            page: true,
+            limit:5,
+            elem: '#lateTable',//设置容器
+            url: '/upload/Teacher/{{pk}}/late',//数据获取url
+            cols: [[//设置列标签、标题、宽度、是否排序等
+                {field: 'id', title:'学生学号',},
+                {field: 'homework', title: '作业',templet:function (d) {
+                        return '<a href="/upload/Teacher/{{ pk }}/download/'+d.id+'" class="layui-table-link">'+d.homework+'</a>'
+                    }},
+                {field: 'status', title: '作业状态'},
+                {field: 'grade', width: 100, title:'分数',templet: function (d) {
+                    if(d.status!='已评判')
+                        return '<button data-method="set" class="layui-btn layui-btn-warm" id="btn' + d.id + '" data-type="auto">打分</button>'
+                    else
+                        return '<div>'+d.score+'</div>'
+                    }},
+            ]],
+            done:function (obj) {
+                for(var index in obj.data){
+                    var itemID = obj.data[index].id
+                    layui.use(['jquery','layer'],function () {
+                         var $ = layui.jquery, layer=layui.layer;
+                         $(document).on('click','#btn'+itemID, function () {
+                             layer.open({
+                                 type:1,
+                                 skin: 'layui-layer-rim',
+                                 title: '打分',
+                                 content:'<form class="layui-form" action="{{ pk }}/grade/'+ itemID +'/" method="post">\n' +
+                                 '    <div class="layui-form-item">\n' +
+                                 '        <label class="layui-form-label">分数</label>\n' +
+                                 '        <div class="layui-input-block">\n' +
+                                 '            <input type="text" name="grade" autocomplete="off" class="layui-input">\n' +
+                                 '        </div>\n' +
+                                 '        <div class="layui-input-block">\n' +
+                                 '            <button class="layui-btn" lay-submit lay-filter="*">提交</button>\n' +
+                                 '        </div>\n' +
+                                 '    </div>\n' +
+                                 '</form>\n' +
+                                 '<script>\n' +
+                                 '    layui.use(\'form\',function () {\n' +
+                                 '        var form = layui.form;\n' +
+                                 '        form.on(\'submit(*)\',function () {\n' +
+                                 '            layer.msg("打分成功！");\n' +
+                                 '        });\n' +
+                                 '    });\n' +
+                                 '<\/script>'
+                             })
+                         })
+                    })
+                }
+            }
+        });
+    })
+</script>
+</body>
+</html>
