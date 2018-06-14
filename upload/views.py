@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,render_to_response
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .forms import loginUser, registerUser
@@ -10,8 +10,9 @@ from django.http import JsonResponse,HttpResponseRedirect, Http404
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from django.http import StreamingHttpResponse
+from django.http import StreamingHttpResponse,HttpResponse, HttpResponseRedirect
 from django.urls import reverse
+from django import forms
 import codecs
 
 # Create your views here.
@@ -263,3 +264,31 @@ def late_homeworks(request,pk):
     resultdict['msg'] = ""
     resultdict['count'] = total
     return JsonResponse(resultdict, safe=False)
+
+class ChangeForm(forms.Form):
+    username = forms.CharField(label='用户名')
+    old_password = forms.CharField(label='原密码',widget=forms.PasswordInput())
+    new_password = forms.CharField(label='新密码',widget=forms.PasswordInput())
+
+@csrf_exempt
+def change_pass(request):
+    if request.method == 'POST':
+        uf = ChangeForm(request.POST)
+        if uf.is_valid():
+            username = uf.cleaned_data['username']
+            old_password = uf.cleaned_data['old_password']
+            new_password = uf.cleaned_data['new_password']
+
+            ##判断用户原密码是否匹配
+            user = authenticate(username=username, password=old_password)
+            if user is not None:
+                u=User.objects.get(username=username)
+                u.set_password(new_password)
+                u.save()  ##如果用户名、原密码匹配则更新密码
+                messages.success(request, '修改成功!')
+            else:
+                messages.error(request, "请检查原密码与用户名是否输入正确!")
+
+    else:
+        uf = ChangeForm()
+    return  render(request, 'change.html', {'form':uf})
